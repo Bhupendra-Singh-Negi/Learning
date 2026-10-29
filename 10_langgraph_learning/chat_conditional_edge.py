@@ -11,11 +11,13 @@ client = OpenAI(
     api_key=os.environ["OPENROUTER_API_KEY"]
 )
 
+# define state
 class State(TypedDict):
     user_query: str
     llm_output: Optional[str]
     is_good:Optional[bool]
 
+# building nodes
 def chatbot(state:State):
     print("\n chatbot response:",state)
     response= client.chat.completions.create(
@@ -27,6 +29,7 @@ def chatbot(state:State):
     state["llm_output"]=response.choices[0].message.content
     return state
 
+# node act as conditional node
 def evaluate_response(state: State) -> Literal["chatbot_gemini","endnode"]:
     print("\n evaluator response:",state)
     SYSTEM_PROMPT=f"""
@@ -62,7 +65,7 @@ def chatbot_gemini(state: State):
     response = client.chat.completions.create(
         model="openrouter/free",
         messages=[
-            {"role":"System","content":"""
+            {"role":"system","content":"""
                 You are ai assistant and proficient in all field you will answer correctly and accuratly
             """},
             {"role":"user","content":state.get("user_query")},
@@ -75,18 +78,24 @@ def endnode(state: State):
     print("\n endnode response:",state)
     return state
 
+# build graph
 graph_builder= StateGraph(State)
 
+# add nodes to graph
 graph_builder.add_node("chatbot",chatbot)
 graph_builder.add_node("chatbot_gemini",chatbot_gemini)
 graph_builder.add_node("endnode",endnode)
 
+# add edges to nodes
 graph_builder.add_edge(START,"chatbot")
+# special edge for conditional node
 graph_builder.add_conditional_edges("chatbot", evaluate_response)
 graph_builder.add_edge("chatbot_gemini","endnode")
 graph_builder.add_edge("endnode", END)
 
+# compile graph
 graph= graph_builder.compile()
 
+# passing user input and collect answer
 updatedState=graph.invoke(State({"user_query":"hey what is 2+2"}))
 print("\n",updatedState)
