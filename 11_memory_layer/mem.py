@@ -13,6 +13,7 @@ client=OpenAI(
 )
 
 config = {
+    
     "vector_store": {
         "provider": "qdrant",
         "config": {"host": "localhost", "port": 6333},
@@ -25,6 +26,14 @@ config = {
             "openai_base_url": "https://openrouter.ai/api/v1",
         },
     },
+    # "graph_store":{
+    #     "provider":"neo4j",
+    #     "config":{
+    #         "uri":os.environ["NEO4J_CONNECTION_URI"],
+    #         "username":os.environ["NEO4J_USERNAME"],
+    #         "password":os.environ["NEO4J_PASSWORD"],
+    #     }
+    # },
     "embedder": {
         "provider": "openai",
         "config": {
